@@ -1,0 +1,37 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: #231e2b; color: #fff4de; font: 17px system-ui, sans-serif; }
+header, main { max-width: 1080px; margin: auto; padding: 20px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap; }
+h1 { margin: 0; color: #ffcf78; }
+h2 { margin-top: 0; }
+button { font: inherit; border: 0; border-radius: 12px; padding: 12px 16px; background: #ffcf78; color: #302238; cursor: pointer; min-height: 46px; }
+button:hover:not(:disabled) { filter: brightness(1.12); transform: translateY(-1px); }
+button:disabled { opacity: .5; cursor: default; }
+.secondary { background: #59486a; color: white; }
+.panel { background: #352b40; border: 2px solid #584364; border-radius: 20px; padding: 22px; margin-bottom: 18px; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.stats { justify-content: space-between; background: #41314c; border-radius: 12px; padding: 14px; margin: 16px 0; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.table { min-height: 205px; background: #674557; border: 5px solid #b8816d; box-shadow: 0 6px #382835; text-align: center; padding: 15px; }
+.table small { display: block; margin: 9px 0; }
+.face { display: block; width: 48px; height: 48px; margin: 0 auto 8px; border-radius: 50%; background: var(--skin, #e4aa7a); border-top: 12px solid var(--hair, #492e39); position: relative; }
+.face:after { content: '•  •'; color: #332530; position: absolute; left: 12px; top: 4px; font-size: 17px; white-space: pre; }
+.meter { height: 8px; background: #281e30; border-radius: 8px; overflow: hidden; margin-top: 10px; }
+.meter i { display: block; height: 100%; background: #aee0a1; width: var(--p); }
+.ticket { background: #fff0cc; color: #403040; border-radius: 12px; padding: 14px; min-width: 170px; flex: 1; }
+.ticket.selected { outline: 4px solid #faad73; }
+.cup { height: 112px; width: 92px; border: 7px solid #fff0cc; border-top: 0; border-radius: 0 0 26px 26px; background: linear-gradient(to top, #9c6146 var(--fill, 0%), transparent 0); margin: 20px auto; position: relative; }
+.cup:after { content: ''; position: absolute; border: 7px solid #fff0cc; border-left: 0; border-radius: 0 20px 20px 0; width: 22px; height: 42px; right: -30px; top: 12px; }
+#notice { min-height: 28px; color: #ffcf78; }
+p { line-height: 1.5; }
+.muted { color: #d2bfd9; }
+footer { font-size: 14px; color: #c8b2d0; margin-top: 20px; }
+.mode-title { margin: 0; flex: 1; }
+.drink-actions { margin-top: 16px; }
+[hidden] { display: none !important; }
+@media (max-width: 650px) {
+  .grid { grid-template-columns: repeat(2, 1fr); }
+  header, main { padding: 12px; }
+  .panel { padding: 15px; }
+  .table { min-height: 195px; padding: 10px; }
+}

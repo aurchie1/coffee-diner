@@ -1,43 +1,72 @@
 <!doctype html>
-<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Coffee Diner</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#231e2b;color:#fff4de;font:17px system-ui,sans-serif}header,main{max-width:1080px;margin:auto;padding:20px}header{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}h1{margin:0;color:#ffcf78}h2{margin-top:0}button{font:inherit;border:0;border-radius:12px;padding:12px 16px;background:#ffcf78;color:#302238;cursor:pointer;min-height:46px}button:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-1px)}button:disabled{opacity:.5;cursor:default}.secondary{background:#59486a;color:white}.panel{background:#352b40;border:2px solid #584364;border-radius:20px;padding:22px;margin-bottom:18px}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}.stats{justify-content:space-between;background:#41314c;border-radius:12px;padding:14px;margin:16px 0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.table{min-height:205px;background:#674557;border:5px solid #b8816d;box-shadow:0 6px #382835;text-align:center;padding:15px}.table small{display:block;margin:9px 0}.face{display:block;width:48px;height:48px;margin:0 auto 8px;border-radius:50%;background:var(--skin,#e4aa7a);border-top:12px solid var(--hair,#492e39);position:relative}.face:after{content:'•  •';color:#332530;position:absolute;left:12px;top:4px;font-size:17px;white-space:pre}.meter{height:8px;background:#281e30;border-radius:8px;overflow:hidden;margin-top:10px}.meter i{display:block;height:100%;background:#aee0a1;width:var(--p)}.ticket{background:#fff0cc;color:#403040;border-radius:12px;padding:14px;min-width:170px;flex:1}.ticket.selected{outline:4px solid #faad73}.cup{height:112px;width:92px;border:7px solid #fff0cc;border-top:0;border-radius:0 0 26px 26px;background:linear-gradient(to top,#9c6146 var(--fill,0%),transparent 0);margin:20px auto;position:relative}.cup:after{content:'';position:absolute;border:7px solid #fff0cc;border-left:0;border-radius:0 20px 20px 0;width:22px;height:42px;right:-30px;top:12px}#notice{min-height:28px;color:#ffcf78}p{line-height:1.5}.muted{color:#d2bfd9}footer{font-size:14px;color:#c8b2d0;margin-top:20px}[hidden]{display:none!important}@media(max-width:650px){.grid{grid-template-columns:repeat(2,1fr)}header,main{padding:12px}.panel{padding:15px}.table{min-height:195px;padding:10px}}
-</style>
-<header><div><h1>Coffee Diner</h1><span class="muted">Good food. Great coffee. Controlled chaos.</span></div><button id="sound" class="secondary">Sound: off</button></header>
-<main><section id="menu" class="panel"><h2>Your next shift</h2><p>Run a cozy diner or work the espresso bar. Complete a 90-second shift, meet the target, and invest your earnings.</p><div id="career"></div><div class="row"><button id="dinerStart">Open diner</button><button id="coffeeStart">Work coffee bar</button><button id="upgrade" class="secondary"></button></div><p class="muted">Diner: click an empty table to seat a waiting guest, click again to take their order, cook their ticket, serve, collect payment, then clean. Coffee: select a guest, build the exact recipe, and serve. Guests leave when patience runs out.</p></section>
-<section id="play" hidden><div class="row"><h2 id="modeTitle" style="margin:0;flex:1"></h2><button id="pause" class="secondary">Pause</button><button id="end" class="secondary">End shift</button></div><div class="row stats" id="stats"></div><p id="notice" role="status" aria-live="polite"></p><section id="diner"><div class="panel"><h2>Dining room</h2><p id="waiting"></p><div class="grid" id="tables"></div></div><div class="panel"><h2>Kitchen tickets</h2><div class="row" id="kitchen"></div></div></section><section id="coffee" hidden><div class="panel"><h2>Coffee queue</h2><div class="row" id="queue"></div></div><div class="panel"><h2>Espresso station</h2><p id="recipe"></p><div class="cup" id="cup" aria-hidden="true"></div><p id="mix"></p><div id="ingredients" class="row"></div><div class="row" style="margin-top:16px"><button id="serve">Serve drink</button><button id="clear" class="secondary">Empty cup</button></div></div></section></section>
-<section id="result" class="panel" hidden><h2 id="resultTitle"></h2><p id="resultText"></p><button id="back">Back to cafe</button></section><footer>Original code-drawn art. No downloads, external assets, libraries, or accounts needed. Progress is saved in this browser when storage is available.</footer></main>
-<script>
-'use strict';
-const $=id=>document.getElementById(id);
-let save={day:1,bank:0,level:0,best:0};try{const s=JSON.parse(localStorage.getItem('coffee-diner-v1'));if(s&&typeof s==='object')for(const k of Object.keys(save))if(Number.isFinite(s[k])&&s[k]>=0)save[k]=Math.floor(s[k]);save.day=Math.max(1,save.day);save.level=Math.min(5,save.level)}catch{}
-const recipes=[{name:'Espresso',parts:['Espresso']},{name:'Americano',parts:['Espresso','Water']},{name:'Latte',parts:['Espresso','Milk']},{name:'Cappuccino',parts:['Espresso','Milk','Foam']},{name:'Mocha',parts:['Espresso','Milk','Chocolate']},{name:'Vanilla latte',parts:['Espresso','Milk','Vanilla']}];
-const foods=['Pancakes','Burger','Pie','Grilled cheese'];
-const colors=['#dfab83','#9f6347','#f4c6a0','#ba815b'];
-let g=null,uid=0,last=performance.now(),paint=0,audio=null,sound=false;
-function persist(){try{localStorage.setItem('coffee-diner-v1',JSON.stringify(save))}catch{}}
-function home(){g=null;$('menu').hidden=false;$('play').hidden=true;$('result').hidden=true;$('career').innerHTML='<p>Day '+save.day+' · Wallet $'+save.bank+' · Best shift $'+save.best+' · Equipment '+save.level+'/5</p>';$('upgrade').textContent=save.level===5?'Equipment maxed':'Upgrade equipment: $'+cost();$('upgrade').disabled=save.level===5||save.bank<cost()}
-function cost(){return 60+save.level*40}
-function beep(good=true){if(!sound||!audio)return;try{const o=audio.createOscillator(),v=audio.createGain();o.connect(v);v.connect(audio.destination);o.frequency.value=good?660:180;v.gain.setValueAtTime(.04,audio.currentTime);v.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.12);o.start();o.stop(audio.currentTime+.13)}catch{}}
-function say(text,good=true){$('notice').textContent=text;beep(good)}
-function person(){return {id:++uid,p:Math.max(22,43-Math.min(save.day,15))+save.level*3,skin:colors[Math.floor(Math.random()*colors.length)],recipe:recipes[Math.floor(Math.random()*recipes.length)]}}
-function start(mode){g={mode,time:90,money:0,served:0,lost:0,target:80+save.day*20,paused:false,spawn:1,wait:[],tables:Array(6).fill(null),queue:[],selected:null,mix:[]};$('menu').hidden=true;$('result').hidden=true;$('play').hidden=false;$('diner').hidden=mode!=='diner';$('coffee').hidden=mode!=='coffee';$('modeTitle').textContent=mode==='diner'?'Diner shift':'Coffee bar shift';$('pause').textContent='Pause';$('notice').textContent='Doors open!';last=performance.now();arrive();arrive();render()}
-function arrive(){const c=person();if(g.mode==='diner'){if(g.wait.length<5)g.wait.push(c);else g.lost++}else if(g.queue.length<5){g.queue.push(c);if(g.selected===null)g.selected=c.id}else g.lost++}
-function finish(){if(!g)return;const won=g.money>=g.target;save.bank+=g.money;save.best=Math.max(save.best,g.money);if(won)save.day++;persist();$('play').hidden=true;$('result').hidden=false;$('resultTitle').textContent=won?'Shift target reached!':'Shift complete — try again';$('resultText').textContent='Earned $'+g.money+' / $'+g.target+' target. Served '+g.served+' guests; '+g.lost+' left. Earnings added to your wallet.';g=null}
-function face(c){return '<span class="face" style="--skin:'+c.skin+'" aria-hidden="true"></span>'}
-function meter(c){return '<div class="meter" aria-label="Patience '+Math.ceil(c.p)+'"><i style="--p:'+Math.max(0,Math.min(100,c.p/60*100))+'%;background:'+(c.p<12?'#ff817a':'#aee0a1')+'"></i></div>'}
-function render(){if(!g)return;$('stats').textContent='Time '+Math.ceil(g.time)+'s  |  Earned $'+g.money+' / $'+g.target+'  |  Served '+g.served+'  |  Lost '+g.lost;
-if(g.mode==='diner'){$('waiting').textContent='Waiting guests: '+g.wait.length+'/5';$('tables').innerHTML=g.tables.map((c,i)=>'<button class="table" data-table="'+i+'" '+(g.paused?'disabled':'')+'>'+(c?face(c)+'Table '+(i+1)+'<small>'+({seated:'Take order',ordered:c.food+' — cook below',cooking:'Cooking: '+Math.ceil(c.cook)+'s',ready:'Serve '+c.food,eating:'Eating: '+Math.ceil(c.eat)+'s',pay:'Collect payment',dirty:'Clear table'})[c.state]+'</small>'+(c.state==='dirty'?'':meter(c)):'Table '+(i+1)+'<small>Seat waiting guest</small>')+'</button>').join('');$('kitchen').innerHTML=g.tables.map((c,i)=>c&&c.state==='ordered'?'<button data-cook="'+i+'" '+(g.paused?'disabled':'')+'>Cook '+c.food+' · Table '+(i+1)+'</button>':'').join('')||'<span class="muted">No unstarted tickets.</span>'}
-else{$('queue').innerHTML=g.queue.map(c=>'<button class="ticket '+(c.id===g.selected?'selected':'')+'" data-customer="'+c.id+'" '+(g.paused?'disabled':'')+'>'+face(c)+c.recipe.name+meter(c)+'</button>').join('')||'Waiting for guests…';const c=g.queue.find(c=>c.id===g.selected);$('recipe').textContent=c?c.recipe.name+': '+c.recipe.parts.join(' + '):'Select a guest to see their recipe.';$('mix').textContent='In cup: '+(g.mix.join(' + ')||'empty');$('cup').style.setProperty('--fill',Math.min(95,g.mix.length*24)+'%');$('serve').disabled=g.paused||!c;$('clear').disabled=g.paused;$('ingredients').querySelectorAll('button').forEach(b=>b.disabled=g.paused)}}
-function table(i){if(!g||g.paused)return;let c=g.tables[i];if(!c){if(!g.wait.length){say('No guests waiting.',false);return}c=g.wait.shift();c.state='seated';g.tables[i]=c;say('Guest seated. Click to take their order.')}else if(c.state==='seated'){c.state='ordered';c.food=foods[Math.floor(Math.random()*foods.length)];say('Order sent to kitchen. Start cooking below.')}else if(c.state==='ready'){c.state='eating';c.eat=4;say('Food served!')}else if(c.state==='pay'){const tip=Math.max(0,Math.ceil(c.p/6));g.money+=12+tip;g.served++;c.state='dirty';say('Collected $'+(12+tip)+'. Clear the table.')}else if(c.state==='dirty'){g.tables[i]=null;say('Table ready.')}render()}
-function cook(i){if(!g||g.paused)return;const c=g.tables[i];if(c&&c.state==='ordered'){c.state='cooking';c.cook=Math.max(1.5,5-save.level*.65);say('Cooking '+c.food+'…');render()}}
-function serve(){if(!g||g.paused)return;const c=g.queue.find(c=>c.id===g.selected);if(!c)return;const same=[...g.mix].sort().join('|')===[...c.recipe.parts].sort().join('|');if(same){const amount=10+Math.ceil(c.p/8);g.money+=amount;g.served++;g.queue=g.queue.filter(x=>x.id!==c.id);g.selected=g.queue[0]?.id??null;say('Perfect '+c.recipe.name+'! +$'+amount)}else{c.p-=7;say('Wrong recipe — cup emptied, guest patience reduced.',false)}g.mix=[];render()}
-function tick(dt){if(!g||g.paused)return;g.time=Math.max(0,g.time-dt);g.spawn-=dt;if(g.spawn<=0){arrive();g.spawn=Math.max(2.8,6-save.day*.2)+(Math.random()*2)}
-if(g.mode==='diner'){for(let i=g.wait.length-1;i>=0;i--){g.wait[i].p-=dt;if(g.wait[i].p<=0){g.wait.splice(i,1);g.lost++}}g.tables.forEach((c,i)=>{if(!c)return;if(c.state==='cooking'){c.cook-=dt;if(c.cook<=0)c.state='ready'}if(c.state==='eating'){c.eat-=dt;if(c.eat<=0)c.state='pay'}if(!['dirty','eating'].includes(c.state)){c.p-=dt;if(c.p<=0){g.lost++;c.state='dirty';say('A guest left. Clear their table.',false)}}})}else{for(let i=g.queue.length-1;i>=0;i--){const c=g.queue[i];c.p-=dt;if(c.p<=0){g.queue.splice(i,1);g.lost++;if(g.selected===c.id){g.selected=g.queue[0]?.id??null;g.mix=[]}say('A coffee guest left.',false)}}}if(g.time<=0)finish()}
-function pause(){if(!g)return;g.paused=!g.paused;$('pause').textContent=g.paused?'Resume':'Pause';render()}
-$('dinerStart').onclick=()=>start('diner');$('coffeeStart').onclick=()=>start('coffee');$('back').onclick=home;$('end').onclick=finish;$('pause').onclick=pause;$('upgrade').onclick=()=>{if(save.level<5&&save.bank>=cost()){save.bank-=cost();save.level++;persist();home()}};
-$('tables').onclick=e=>{const b=e.target.closest('[data-table]');if(b)table(Number(b.dataset.table))};$('kitchen').onclick=e=>{const b=e.target.closest('[data-cook]');if(b)cook(Number(b.dataset.cook))};$('queue').onclick=e=>{const b=e.target.closest('[data-customer]');if(b&&g&&!g.paused){g.selected=Number(b.dataset.customer);render()}};
-for(const ingredient of ['Espresso','Water','Milk','Foam','Chocolate','Vanilla']){const b=document.createElement('button');b.textContent=ingredient;b.className='secondary';b.onclick=()=>{if(g&&!g.paused&&g.mix.length<6){g.mix.push(ingredient);render()}};$('ingredients').append(b)}
-$('serve').onclick=serve;$('clear').onclick=()=>{if(g&&!g.paused){g.mix=[];render()}};$('sound').onclick=()=>{try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();sound=!sound;$('sound').textContent='Sound: '+(sound?'on':'off');beep()}catch{$('sound').textContent='Sound unavailable'}};
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&g&&!g.paused)pause()});function frame(now){const dt=Math.min((now-last)/1000,.1);last=now;tick(dt);paint+=dt;if(paint>.2){render();paint=0}requestAnimationFrame(frame)}home();requestAnimationFrame(frame);
-</script></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Coffee Diner</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+<header>
+  <div><h1>Coffee Diner</h1><span class="muted">Good food. Great coffee. Controlled chaos.</span></div>
+  <button id="sound" class="secondary">Sound: off</button>
+</header>
+<main>
+  <section id="menu" class="panel">
+    <h2>Your next shift</h2>
+    <p>Run a cozy diner or work the espresso bar. Complete a 90-second shift, meet the target, and invest your earnings.</p>
+    <div id="career"></div>
+    <div class="row">
+      <button id="dinerStart">Open diner</button>
+      <button id="coffeeStart">Work coffee bar</button>
+      <button id="upgrade" class="secondary"></button>
+    </div>
+    <p class="muted">Diner: click an empty table to seat a waiting guest, click again to take their order, cook their ticket, serve, collect payment, then clean. Coffee: select a guest, build the exact recipe, and serve. Guests leave when patience runs out.</p>
+  </section>
+  <section id="play" hidden>
+    <div class="row">
+      <h2 id="modeTitle" class="mode-title"></h2>
+      <button id="pause" class="secondary">Pause</button>
+      <button id="end" class="secondary">End shift</button>
+    </div>
+    <div class="row stats" id="stats"></div>
+    <p id="notice" role="status" aria-live="polite"></p>
+    <section id="diner">
+      <div class="panel">
+        <h2>Dining room</h2>
+        <p id="waiting"></p>
+        <div class="grid" id="tables"></div>
+      </div>
+      <div class="panel">
+        <h2>Kitchen tickets</h2>
+        <div class="row" id="kitchen"></div>
+      </div>
+    </section>
+    <section id="coffee" hidden>
+      <div class="panel">
+        <h2>Coffee queue</h2>
+        <div class="row" id="queue"></div>
+      </div>
+      <div class="panel">
+        <h2>Espresso station</h2>
+        <p id="recipe"></p>
+        <div class="cup" id="cup" aria-hidden="true"></div>
+        <p id="mix"></p>
+        <div id="ingredients" class="row"></div>
+        <div class="row drink-actions">
+          <button id="serve">Serve drink</button>
+          <button id="clear" class="secondary">Empty cup</button>
+        </div>
+      </div>
+    </section>
+  </section>
+  <section id="result" class="panel" hidden>
+    <h2 id="resultTitle"></h2>
+    <p id="resultText"></p>
+    <button id="back">Back to cafe</button>
+  </section>
+  <footer>Original code-drawn art. No downloads, external assets, libraries, or accounts needed. Progress is saved in this browser when storage is available.</footer>
+</main>
+</body>
+</html>
