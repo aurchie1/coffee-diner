@@ -10,6 +10,8 @@
 .drink-actions { margin-top: 16px; }
 #menu label { display: block; margin: 10px 0; }
 #menu input[type=range] { width: 220px; vertical-align: middle; }
+button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.table:active, .ticket:active { transform: translateY(3px); }
 @media (max-width: 650px) {
   .grid { grid-template-columns: repeat(2, 1fr); }
   .table { min-height: 195px; padding: 10px; }
