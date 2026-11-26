@@ -1,0 +1,16 @@
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.table { min-height: 205px; background: #674557; border: 5px solid #b8816d; box-shadow: 0 6px #382835; text-align: center; padding: 15px; }
+.table small { display: block; margin: 9px 0; }
+.ticket { background: #fff0cc; color: #403040; border-radius: 12px; padding: 14px; min-width: 170px; flex: 1; }
+.ticket.selected { outline: 4px solid #faad73; }
+.cup { height: 112px; width: 92px; border: 7px solid #fff0cc; border-top: 0; border-radius: 0 0 26px 26px; background: linear-gradient(to top, #9c6146 var(--fill, 0%), transparent 0); margin: 20px auto; position: relative; }
+.cup:after { content: ''; position: absolute; border: 7px solid #fff0cc; border-left: 0; border-radius: 0 20px 20px 0; width: 22px; height: 42px; right: -30px; top: 12px; }
+#notice { min-height: 28px; color: #ffcf78; }
+.mode-title { margin: 0; flex: 1; }
+.drink-actions { margin-top: 16px; }
+#menu label { display: block; margin: 10px 0; }
+#menu input[type=range] { width: 220px; vertical-align: middle; }
+@media (max-width: 650px) {
+  .grid { grid-template-columns: repeat(2, 1fr); }
+  .table { min-height: 195px; padding: 10px; }
+}

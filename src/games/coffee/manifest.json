@@ -1,0 +1,5 @@
+{
+  "id": "coffee",
+  "title": "Coffee Diner",
+  "scripts": ["main.js", "interactions.js"]
+}

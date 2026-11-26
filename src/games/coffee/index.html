@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Coffee Diner</title>
+  <link rel="stylesheet" href="../../shared/shared.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="../../shared/util.js" defer></script>
+  <script src="main.js" defer></script>
+  <script src="interactions.js" defer></script>
+</head>
+<body>
+<header>
+  <div><h1>Coffee Diner</h1><span class="muted">Good food. Great coffee. Controlled chaos.</span></div>
+  <button id="sound" class="secondary">Sound: off</button>
+</header>
+<main>
+  <section id="menu" class="panel">
+    <h2>Your next shift</h2>
+    <p>Run a cozy diner or work the espresso bar. Complete a timed shift, meet the target, and invest your earnings.</p>
+    <div id="career"></div>
+    <label>Guest patience: <output id="patienceOut"></output>
+      <input id="patience" type="range" min="50" max="200" step="10"></label>
+    <label>Shift length: <output id="lenOut"></output>
+      <input id="shiftLen" type="range" min="30" max="300" step="15"></label>
+    <label><input id="endless" type="checkbox"> Endless mode (ends after 5 lost guests)</label>
+    <div class="row">
+      <button id="dinerStart">Open diner</button>
+      <button id="coffeeStart">Work coffee bar</button>
+      <button id="upgrade" class="secondary"></button>
+    </div>
+    <p class="muted">Diner: click an empty table to seat a waiting guest, click again to take their order, cook their ticket, serve, collect payment, then clean. Coffee: select a guest, build the exact recipe, and serve. Guests leave when patience runs out.</p>
+  </section>
+  <section id="play" hidden>
+    <div class="row">
+      <h2 id="modeTitle" class="mode-title"></h2>
+      <button id="pause" class="secondary">Pause</button>
+      <button id="end" class="secondary">End shift</button>
+    </div>
+    <div class="row stats" id="stats"></div>
+    <p id="notice" role="status" aria-live="polite"></p>
+    <section id="diner">
+      <div class="panel">
+        <h2>Dining room</h2>
+        <p id="waiting"></p>
+        <div class="grid" id="tables"></div>
+      </div>
+      <div class="panel">
+        <h2>Kitchen tickets</h2>
+        <div class="row" id="kitchen"></div>
+      </div>
+    </section>
+    <section id="coffee" hidden>
+      <div class="panel">
+        <h2>Coffee queue</h2>
+        <div class="row" id="queue"></div>
+      </div>
+      <div class="panel">
+        <h2>Espresso station</h2>
+        <p id="recipe"></p>
+        <div class="cup" id="cup" aria-hidden="true"></div>
+        <p id="mix"></p>
+        <div id="ingredients" class="row"></div>
+        <div class="row drink-actions">
+          <button id="serve">Serve drink</button>
+          <button id="clear" class="secondary">Empty cup</button>
+        </div>
+      </div>
+    </section>
+  </section>
+  <section id="result" class="panel" hidden>
+    <h2 id="resultTitle"></h2>
+    <p id="resultText"></p>
+    <button id="back">Back to cafe</button>
+  </section>
+  <footer>Original code-drawn art. No downloads, external assets, libraries, or accounts needed. Progress is saved in this browser when storage is available.</footer>
+</main>
+</body>
+</html>
