@@ -1,0 +1,10 @@
+{
+  "title": "Game Hub",
+  "blurbs": {
+    "coffee": "Run a diner or work the espresso bar. Timed shifts, upgrades, endless mode and a daily goal."
+  },
+  "wip": [
+    { "title": "Bakery Rush", "blurb": "Bake, decorate and serve against the clock." },
+    { "title": "Tea Garden", "blurb": "A slower game about growing and blending tea." }
+  ]
+}
