@@ -22,10 +22,8 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - name: Build single-file games
+      - name: Build single-file games and hub
         run: node build.mjs
-      - name: Make the game the site root
-        run: cp dist/coffee.html dist/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
