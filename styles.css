@@ -28,6 +28,8 @@ p { line-height: 1.5; }
 footer { font-size: 14px; color: #c8b2d0; margin-top: 20px; }
 .mode-title { margin: 0; flex: 1; }
 .drink-actions { margin-top: 16px; }
+#menu label { display: block; margin: 10px 0; }
+#menu input[type=range] { width: 220px; vertical-align: middle; }
 [hidden] { display: none !important; }
 @media (max-width: 650px) {
   .grid { grid-template-columns: repeat(2, 1fr); }

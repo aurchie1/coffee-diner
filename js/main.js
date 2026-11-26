@@ -1,9 +1,31 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-let save = { day: 1, bank: 0, level: 0, best: 0 };
+
+const SAVE_KEY = 'coffee-diner-save';
+const OLD_KEYS = ['coffee-diner-v1', 'coffee-diner-shift-v2'];
+
+function loadBundle() {
+  try {
+    const b = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if (b && b.version === 3) return b;
+    const career = JSON.parse(localStorage.getItem('coffee-diner-v1'));
+    const shift = JSON.parse(localStorage.getItem('coffee-diner-shift-v2'));
+    return { version: 3, career, shift: shift?.game ?? null };
+  } catch { return { version: 3, career: null, shift: null }; }
+}
+let bundle = loadBundle();
+
+const num = (v, lo, hi, d) => Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d;
+let settings = {
+  patience: num(bundle.settings?.patience, 50, 200, 100),
+  shiftLen: num(bundle.settings?.shiftLen, 30, 300, 90),
+  endless: bundle.settings?.endless === true
+};
+
+let save = { day: 1, bank: 0, level: 0, best: 0, endlessBest: 0 };
 try {
-  const stored = JSON.parse(localStorage.getItem('coffee-diner-v1'));
+  const stored = bundle.career;
   if (stored && typeof stored === 'object') {
     for (const key of Object.keys(save)) {
       if (Number.isFinite(stored[key]) && stored[key] >= 0) save[key] = Math.floor(stored[key]);
@@ -30,16 +52,25 @@ let paint = 0;
 let audio = null;
 let sound = false;
 
-function persist() {
-  try { localStorage.setItem('coffee-diner-v1', JSON.stringify(save)); } catch {}
+function writeBundle() {
+  bundle.version = 3;
+  bundle.career = save;
+  bundle.settings = settings;
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(bundle));
+    OLD_KEYS.forEach(k => localStorage.removeItem(k));
+    return true;
+  } catch { return false; }
 }
+
+function persist() { return writeBundle(); }
 
 function home() {
   g = null;
   $('menu').hidden = false;
   $('play').hidden = true;
   $('result').hidden = true;
-  $('career').innerHTML = `<p>Day ${save.day} · Wallet $${save.bank} · Best shift $${save.best} · Equipment ${save.level}/5</p>`;
+  $('career').innerHTML = `<p>Day ${save.day} · Wallet $${save.bank} · Best shift $${save.best} · Best endless ${save.endlessBest} served · Equipment ${save.level}/5</p>`;
   $('upgrade').textContent = save.level === 5 ? 'Equipment maxed' : `Upgrade equipment: $${cost()}`;
   $('upgrade').disabled = save.level === 5 || save.bank < cost();
 }
@@ -67,9 +98,10 @@ function say(text, good = true) {
 }
 
 function person() {
+  const ramp = g?.endless ? Math.max(.4, 1 - g.time / 900) : 1;
+  const p = (Math.max(22, 43 - Math.min(save.day, 15)) + save.level * 3) * settings.patience / 100 * ramp;
   return {
-    id: ++uid,
-    p: Math.max(22, 43 - Math.min(save.day, 15)) + save.level * 3,
+    id: ++uid, p, maxP: p,
     skin: colors[Math.floor(Math.random() * colors.length)],
     recipe: recipes[Math.floor(Math.random() * recipes.length)]
   };
@@ -77,8 +109,11 @@ function person() {
 
 function start(mode) {
   g = {
-    mode, time: 90, money: 0, served: 0, lost: 0,
-    target: 80 + save.day * 20, paused: false, spawn: 1,
+    mode, endless: settings.endless, maxLost: 5,
+    time: settings.endless ? 0 : settings.shiftLen,
+    money: 0, served: 0, lost: 0,
+    target: Math.round((80 + save.day * 20) * settings.shiftLen / 90),
+    paused: false, spawn: 1,
     wait: [], tables: Array(6).fill(null), queue: [], selected: null, mix: []
   };
   $('menu').hidden = true;
@@ -108,15 +143,17 @@ function arrive() {
 
 function finish() {
   if (!g) return;
-  const won = g.money >= g.target;
+  const won = !g.endless && g.money >= g.target;
   save.bank += g.money;
-  save.best = Math.max(save.best, g.money);
-  if (won) save.day++;
+  if (g.endless) save.endlessBest = Math.max(save.endlessBest, g.served);
+  else { save.best = Math.max(save.best, g.money); if (won) save.day++; }
   persist();
   $('play').hidden = true;
   $('result').hidden = false;
-  $('resultTitle').textContent = won ? 'Shift target reached!' : 'Shift complete — try again';
-  $('resultText').textContent = `Earned $${g.money} / $${g.target} target. Served ${g.served} guests; ${g.lost} left. Earnings added to your wallet.`;
+  $('resultTitle').textContent = g.endless ? 'Endless run over' : won ? 'Shift target reached!' : 'Shift complete — try again';
+  $('resultText').textContent = g.endless
+    ? `Survived ${Math.floor(g.time)}s, served ${g.served}, earned $${g.money}. Best endless: ${save.endlessBest} served.`
+    : `Earned $${g.money} / $${g.target} target. Served ${g.served} guests; ${g.lost} left. Earnings added to your wallet.`;
   g = null;
 }
 
@@ -125,14 +162,17 @@ function face(customer) {
 }
 
 function meter(customer) {
-  const percent = Math.max(0, Math.min(100, customer.p / 60 * 100));
-  const color = customer.p < 12 ? '#ff817a' : '#aee0a1';
+  const max = customer.maxP || 60;
+  const percent = Math.max(0, Math.min(100, customer.p / max * 100));
+  const color = customer.p < max * 0.2 ? '#ff817a' : '#aee0a1';
   return `<div class="meter" aria-label="Patience ${Math.ceil(customer.p)}"><i style="--p:${percent}%;background:${color}"></i></div>`;
 }
 
 function render() {
   if (!g) return;
-  $('stats').textContent = `Time ${Math.ceil(g.time)}s  |  Earned $${g.money} / $${g.target}  |  Served ${g.served}  |  Lost ${g.lost}`;
+  $('stats').textContent = g.endless
+    ? `Survived ${Math.floor(g.time)}s  |  Earned $${g.money}  |  Served ${g.served}  |  Lost ${g.lost}/${g.maxLost}`
+    : `Time ${Math.ceil(g.time)}s  |  Earned $${g.money} / $${g.target}  |  Served ${g.served}  |  Lost ${g.lost}`;
   if (g.mode === 'diner') renderDiner();
   else renderCoffee();
 }
@@ -238,7 +278,7 @@ function serve() {
 
 function tick(dt) {
   if (!g || g.paused) return;
-  g.time = Math.max(0, g.time - dt);
+  g.time = g.endless ? g.time + dt : Math.max(0, g.time - dt);
   g.spawn -= dt;
   if (g.spawn <= 0) {
     arrive();
@@ -246,7 +286,7 @@ function tick(dt) {
   }
   if (g.mode === 'diner') tickDiner(dt);
   else tickCoffee(dt);
-  if (g.time <= 0) finish();
+  if (g.endless ? g.lost >= g.maxLost : g.time <= 0) finish();
 }
 
 function tickDiner(dt) {
@@ -360,5 +400,20 @@ function frame(now) {
   if (paint > .2) { render(); paint = 0; }
   requestAnimationFrame(frame);
 }
+
+function syncSettings() {
+  $('patienceOut').textContent = settings.patience + '%';
+  $('lenOut').textContent = settings.shiftLen + 's';
+  $('shiftLen').disabled = settings.endless;
+}
+for (const k of ['patience', 'shiftLen']) {
+  $(k).value = settings[k];
+  $(k).oninput = () => { settings[k] = Number($(k).value); syncSettings(); };
+  $(k).onchange = persist;
+}
+$('endless').checked = settings.endless;
+$('endless').onchange = () => { settings.endless = $('endless').checked; syncSettings(); persist(); };
+syncSettings();
+
 home();
 requestAnimationFrame(frame);

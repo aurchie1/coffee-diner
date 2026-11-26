@@ -16,8 +16,13 @@
 <main>
   <section id="menu" class="panel">
     <h2>Your next shift</h2>
-    <p>Run a cozy diner or work the espresso bar. Complete a 90-second shift, meet the target, and invest your earnings.</p>
+    <p>Run a cozy diner or work the espresso bar. Complete a timed shift, meet the target, and invest your earnings.</p>
     <div id="career"></div>
+    <label>Guest patience: <output id="patienceOut"></output>
+      <input id="patience" type="range" min="50" max="200" step="10"></label>
+    <label>Shift length: <output id="lenOut"></output>
+      <input id="shiftLen" type="range" min="30" max="300" step="15"></label>
+    <label><input id="endless" type="checkbox"> Endless mode (ends after 5 lost guests)</label>
     <div class="row">
       <button id="dinerStart">Open diner</button>
       <button id="coffeeStart">Work coffee bar</button>

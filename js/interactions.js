@@ -1,7 +1,6 @@
 'use strict';
 
 (() => {
-  const key = 'coffee-diner-shift-v2';
   let drag = null;
   let blockClickUntil = 0;
   const resume = document.createElement('button');
@@ -22,11 +21,13 @@
 
   function read() {
     try {
-      const data = JSON.parse(localStorage.getItem(key));
-      if (!data || data.version !== 2 || !data.game) return null;
-      const state = data.game;
+      if (!bundle.shift) return null;
+      const state = structuredClone(bundle.shift);
       const number = value => Number.isFinite(value) && value >= 0;
-      if (!['diner', 'coffee'].includes(state.mode) || !number(state.time) || state.time > 90 || state.time <= 0) return null;
+      state.endless = state.endless === true;
+      if (!number(state.maxLost)) state.maxLost = 5;
+      if (!['diner', 'coffee'].includes(state.mode) || !number(state.time) || state.time > 3600
+          || (!state.endless && (state.time <= 0 || state.time > 300))) return null;
       if (!['money', 'served', 'lost', 'target', 'spawn'].every(field => number(state[field]))) return null;
       if (!Array.isArray(state.tables) || state.tables.length !== 6 || !Array.isArray(state.wait) || state.wait.length > 5 || !Array.isArray(state.queue) || state.queue.length > 5) return null;
       if (!Array.isArray(state.mix) || state.mix.length > 6 || !state.mix.every(item => ['Espresso','Water','Milk','Foam','Chocolate','Vanilla'].includes(item))) return null;
@@ -51,12 +52,10 @@
   }
 
   function checkpoint() {
-    try {
-      localStorage.setItem('coffee-diner-v1', JSON.stringify(save));
-      if (g) localStorage.setItem(key, JSON.stringify({ version: 2, game: g }));
-      else localStorage.removeItem(key);
-      status.textContent = 'Progress saved locally in this browser.';
-    } catch { status.textContent = 'Browser storage unavailable: progress cannot be saved.'; }
+    bundle.shift = g;
+    status.textContent = writeBundle()
+      ? 'Progress saved locally in this browser.'
+      : 'Browser storage unavailable: progress cannot be saved.';
     resume.disabled = !read();
   }
 
