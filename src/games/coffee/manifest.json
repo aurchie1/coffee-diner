@@ -1,5 +1,5 @@
 {
   "id": "coffee",
   "title": "Coffee Diner",
-  "scripts": ["main.js", "interactions.js", "latency.js"]
+  "scripts": ["main.js", "interactions.js", "latency.js", "daily.js"]
 }
