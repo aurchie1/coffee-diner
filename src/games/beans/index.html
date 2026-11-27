@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Bean Counter</title>
+  <link rel="stylesheet" href="../../shared/shared.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="../../shared/util.js" defer></script>
+  <script src="main.js" defer></script>
+</head>
+<body>
+<header>
+  <a href="./" style="color:inherit;font-size:.9em">← Hub</a>
+  <div><h1>Bean Counter</h1><span class="muted">Tap beans. Hire help. Let it roast.</span></div>
+</header>
+<main>
+  <section class="panel">
+    <h2><span id="beans">0</span> beans</h2>
+    <p class="muted"><span id="rate">0</span> beans/sec · <span id="power">1</span> per tap</p>
+    <p id="notice" role="status" aria-live="polite"></p>
+    <button id="tap" class="bean" aria-label="Tap for beans">☕ Tap</button>
+  </section>
+  <section class="panel">
+    <h2>Shop</h2>
+    <div id="shop"></div>
+  </section>
+  <button id="reset" class="secondary">Reset progress</button>
+  <footer>Progress is saved in this browser. Offline earnings are capped at 8 hours.</footer>
+</main>
+</body>
+</html>

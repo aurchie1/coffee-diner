@@ -1,0 +1,5 @@
+.bean{display:block;width:100%;padding:36px 12px;font-size:28px;border-radius:18px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.bean:active{transform:translateY(3px)}
+#shop button{display:block;width:100%;margin:8px 0;padding:12px;text-align:left;touch-action:manipulation}
+#shop button:disabled{opacity:.5}
+#reset{margin-top:12px}

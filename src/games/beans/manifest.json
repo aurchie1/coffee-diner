@@ -1,0 +1,5 @@
+{
+  "id": "beans",
+  "title": "Bean Counter",
+  "scripts": ["main.js"]
+}
