@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Wonder Works</title>
+  <link rel="stylesheet" href="../../shared/shared.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="../../shared/util.js" defer></script>
+  <script src="main.js" defer></script>
+</head>
+<body>
+<header>
+  <a href="./" style="color:inherit;font-size:.9em">← Hub</a>
+  <div><h1>Wonder Works</h1><span class="muted">Turn the crank. Build the machine.</span></div>
+</header>
+<main>
+  <section class="panel">
+    <h2><span id="coins">0</span> coins</h2>
+    <p class="muted"><span id="cpt">1</span> coins/turn · <span id="auto">0</span> auto turns/sec · <span id="sweets">0</span> sweets made</p>
+    <p id="notice" role="status" aria-live="polite"></p>
+    <canvas id="machine" width="320" height="320" aria-label="Crank machine. Drag in circles to turn."></canvas>
+    <button id="turn" class="secondary">Turn crank (quarter turn)</button>
+  </section>
+  <section class="panel">
+    <h2>Upgrades</h2>
+    <div id="shop"></div>
+  </section>
+  <button id="reset" class="secondary">Reset progress</button>
+  <footer>Progress is saved in this browser. Offline earnings are capped at 4 hours.</footer>
+</main>
+</body>
+</html>

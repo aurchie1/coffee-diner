@@ -2,7 +2,8 @@
   "title": "Game Hub",
   "blurbs": {
     "coffee": "Run a diner or work the espresso bar. Timed shifts, upgrades, endless mode and a daily goal.",
-    "beans": "An idle clicker. Tap beans, hire grinders and roasters, and earn while you are away."
+    "beans": "An idle clicker. Tap beans, hire grinders and roasters, and earn while you are away.",
+    "wonder": "Turn a crank, automate it, and grow a wild candy-factory machine."
   },
   "wip": [
     { "title": "Bakery Rush", "blurb": "Bake, decorate and serve against the clock." },

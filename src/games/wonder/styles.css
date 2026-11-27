@@ -1,0 +1,5 @@
+#machine{display:block;width:100%;max-width:360px;margin:8px auto;background:#382835;border-radius:14px;touch-action:none;user-select:none;-webkit-user-select:none}
+#turn{display:block;width:100%;margin-top:8px;touch-action:manipulation}
+#shop button{display:block;width:100%;margin:8px 0;padding:12px;text-align:left;touch-action:manipulation}
+#shop button:disabled{opacity:.5}
+#reset{margin-top:12px}
