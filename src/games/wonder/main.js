@@ -5,6 +5,11 @@ const UPS = [
   { id: 'steam', name: 'Steam engine', desc: '+1 auto turn/sec', base: 300, g: 1.4 },
   { id: 'belt', name: 'Conveyor belt', desc: '+50% coins per turn', base: 1000, g: 2 }
 ];
+const ROOMS = [
+  { id: 'river', name: 'Chocolate river', desc: 'x1.5 coins per turn', mult: 1.5, cost: 2000 },
+  { id: 'fizz', name: 'Fizzy-lifting tank', desc: 'x2 coins per turn', mult: 2, cost: 15000 },
+  { id: 'maze', name: 'Candy-sorting maze', desc: 'x3 coins per turn', mult: 3, cost: 120000 }
+];
 const KEY = 'save:' + GAME_ID;
 const TAU = Math.PI * 2;
 const S = { coins: 0, turns: 0, owned: {} };
@@ -13,7 +18,8 @@ const cx = cv.getContext('2d');
 let ang = 0, drag = false, lastA = 0, last = performance.now();
 
 function lvl(id) { return S.owned[id] || 0; }
-function cpt() { return (1 + lvl('handle')) * (1 + 0.25 * lvl('gears')) * (1 + 0.5 * lvl('belt')); }
+function roomMult() { return ROOMS.reduce((m, r) => m * (lvl(r.id) ? r.mult : 1), 1); }
+function cpt() { return (1 + lvl('handle')) * (1 + 0.25 * lvl('gears')) * (1 + 0.5 * lvl('belt')) * roomMult(); }
 function autoRate() { return 0.2 * lvl('wheel') + lvl('steam'); }
 function cost(u) { return Math.ceil(u.base * Math.pow(u.g, lvl(u.id))); }
 function addTurns(t) { S.turns += t; S.coins += t * cpt(); }
@@ -32,6 +38,7 @@ function load() {
   S.coins = num(r.coins, 0, 1e300, 0);
   S.turns = num(r.turns, 0, 1e300, 0);
   for (const u of UPS) S.owned[u.id] = num(r.owned && r.owned[u.id], 0, 1e4, 0);
+  for (const m of ROOMS) S.owned[m.id] = num(r.owned && r.owned[m.id], 0, 1, 0);
   const away = num((Date.now() - num(r.t, 0, Date.now(), Date.now())) / 1000, 0, 14400, 0);
   const t = away * autoRate();
   if (t * cpt() >= 1) {
@@ -44,12 +51,13 @@ function save() {
 }
 
 function buildShop() {
-  const shop = $('shop');
-  shop.innerHTML = '';
-  for (const u of UPS) {
-    const b = document.createElement('button');
-    b.dataset.buy = u.id;
-    shop.appendChild(b);
+  for (const [box, list] of [[$('shop'), UPS], [$('rooms'), ROOMS]]) {
+    box.innerHTML = '';
+    for (const u of list) {
+      const b = document.createElement('button');
+      b.dataset.buy = u.id;
+      box.appendChild(b);
+    }
   }
 }
 function renderText() {
@@ -62,11 +70,42 @@ function renderText() {
     b.textContent = u.name + ' (lv ' + lvl(u.id) + ', ' + u.desc + ') — ' + fmt(cost(u)) + ' coins';
     b.disabled = S.coins < cost(u);
   }
+  for (const b of $('rooms').children) {
+    const m = ROOMS.find(x => x.id === b.dataset.buy);
+    b.textContent = lvl(m.id) ? m.name + ' — built (' + m.desc + ')' : m.name + ' (' + m.desc + ') — ' + fmt(m.cost) + ' coins';
+    b.disabled = !!lvl(m.id) || S.coins < m.cost;
+  }
 }
 
 function draw() {
   cx.clearRect(0, 0, 320, 320);
   const w = Math.min(lvl('wheel'), 6), s = Math.min(lvl('steam'), 4), bl = Math.min(lvl('belt'), 6);
+  if (lvl('river')) {
+    cx.strokeStyle = '#6b3e26'; cx.lineWidth = 8;
+    cx.beginPath();
+    for (let x = 0; x <= 320; x += 8) {
+      const y = 313 + Math.sin(x / 18 + ang * 2) * 3;
+      if (x === 0) cx.moveTo(x, y); else cx.lineTo(x, y);
+    }
+    cx.stroke();
+  }
+  if (lvl('fizz')) {
+    cx.fillStyle = '#7fc4ff55'; cx.fillRect(240, 20, 60, 80);
+    cx.strokeStyle = '#7fc4ff'; cx.lineWidth = 3; cx.strokeRect(240, 20, 60, 80);
+    cx.fillStyle = '#e8f6ff';
+    for (let k = 0; k < 5; k++) {
+      cx.beginPath(); cx.arc(250 + k * 10, 95 - ((ang * 8 + k * 17) % 70), 3, 0, TAU); cx.fill();
+    }
+  }
+  if (lvl('maze')) {
+    cx.strokeStyle = '#b8816d'; cx.lineWidth = 3;
+    cx.strokeRect(245, 120, 60, 60);
+    cx.beginPath(); cx.moveTo(265, 120); cx.lineTo(265, 160); cx.moveTo(285, 180); cx.lineTo(285, 140); cx.stroke();
+    const p = (ang * 0.5) % 4, f = p % 1;
+    const pts = [[245, 120], [305, 120], [305, 180], [245, 180], [245, 120]];
+    const a = pts[Math.floor(p)], b = pts[Math.floor(p) + 1];
+    cx.fillStyle = '#ff7a7a'; cx.beginPath(); cx.arc(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, 5, 0, TAU); cx.fill();
+  }
   for (let i = 0; i < w; i++) {
     cx.strokeStyle = '#7fc4ff'; cx.lineWidth = 3;
     cx.beginPath(); cx.arc(30 + i * 30, 290, 12, 0, TAU); cx.stroke();
@@ -115,18 +154,28 @@ cv.addEventListener('pointermove', e => {
 });
 for (const ev of ['pointerup', 'pointercancel']) cv.addEventListener(ev, () => { drag = false; });
 $('turn').addEventListener('click', () => { ang += TAU / 4; addTurns(0.25); });
-$('shop').addEventListener('click', e => {
-  const u = UPS.find(x => x.id === (e.target.dataset && e.target.dataset.buy));
-  if (!u || S.coins < cost(u)) return;
-  S.coins -= cost(u);
-  S.owned[u.id] = lvl(u.id) + 1;
+function onBuy(e) {
+  const id = e.target.dataset && e.target.dataset.buy;
+  const u = UPS.find(x => x.id === id);
+  const m = ROOMS.find(x => x.id === id);
+  if (u && S.coins >= cost(u)) {
+    S.coins -= cost(u);
+    S.owned[u.id] = lvl(u.id) + 1;
+  } else if (m && !lvl(m.id) && S.coins >= m.cost) {
+    S.coins -= m.cost;
+    S.owned[m.id] = 1;
+    $('notice').textContent = 'Built: ' + m.name + '!';
+  } else return;
   save();
-});
+}
+$('shop').addEventListener('click', onBuy);
+$('rooms').addEventListener('click', onBuy);
 $('reset').addEventListener('click', () => {
   if (!confirm('Reset all Wonder Works progress?')) return;
   try { localStorage.removeItem(KEY); } catch (e) {}
   S.coins = 0; S.turns = 0;
   for (const u of UPS) S.owned[u.id] = 0;
+  for (const m of ROOMS) S.owned[m.id] = 0;
   $('notice').textContent = '';
 });
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
