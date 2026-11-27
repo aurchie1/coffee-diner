@@ -1,0 +1,6 @@
+{
+  "id": "tea",
+  "title": "Tea Garden",
+  "wip": true,
+  "scripts": ["main.js"]
+}

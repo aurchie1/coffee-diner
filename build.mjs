@@ -9,7 +9,7 @@ const built = [];
 mkdirSync('dist', { recursive: true });
 for (const game of readdirSync('src/games')) {
   const dir = join('src/games', game);
-  const { id, title, scripts } = JSON.parse(read(join(dir, 'manifest.json')));
+  const { id, title, scripts, wip } = JSON.parse(read(join(dir, 'manifest.json')));
 
   const css = read('src/shared/shared.css') + '\n' + read(join(dir, 'styles.css'));
   const js = [
@@ -30,8 +30,8 @@ for (const game of readdirSync('src/games')) {
   }
 
   writeFileSync(join('dist', `${game}.html`), html);
-  built.push({ id: game, title: title || game });
-  console.log(`${game}.html  ${(Buffer.byteLength(html) / 1024).toFixed(1)} KB`);
+  if (!wip) built.push({ id: game, title: title || game });
+  console.log(`${game}.html  ${(Buffer.byteLength(html) / 1024).toFixed(1)} KB${wip ? ' (hidden WIP)' : ''}`);
 }
 
 const h = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);

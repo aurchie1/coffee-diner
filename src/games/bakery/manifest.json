@@ -1,0 +1,6 @@
+{
+  "id": "bakery",
+  "title": "Bakery Rush",
+  "wip": true,
+  "scripts": ["main.js"]
+}
